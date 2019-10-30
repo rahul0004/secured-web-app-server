@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
 
+const tokenLib = require('./token');
+
 const app = express();
 
 const connection = mysql.createConnection({
@@ -43,6 +45,7 @@ var AppUserAuth = {
 //console.log("AppUserAuth in server...", AppUserAuth);
 
 app.get("/", function(req, res){
+    //console.log(req);
 	/*res.setHeader('Content-Type', 'text/plain');
     res.end('You\'re in reception');*/
     res.sendFile(path.join(__dirname + '/login.html'));
@@ -85,7 +88,14 @@ app.post("/auth", function(req, res){
                     //console.log("returned value...", AppUserAuth);
                     AppUserAuth.isAuthenticated = req.session.loggedIn;
                     AppUserAuth.userName = req.session.username;
-                    AppUserAuth.bearerToken = 'xaygdu12df'; // modify this 
+                    var options = {
+                        issuer: "server",
+                        subject: AppUserAuth.userName,
+                        audience:''
+                    }
+                    //console.log("options...", options);
+
+                    AppUserAuth.bearerToken = tokenLib.sign({userName:AppUserAuth.userName}, options);
                     res.status(200).json(AppUserAuth);
                     res.end();
                 });
@@ -112,6 +122,23 @@ app.get('/home', function(request, response) {
 		response.send('Please login to view this page!');
 	}
 	response.end();
+});
+
+app.get('/product/:id', function(req, res){
+    console.log(req.header('bearerToken'));
+    var options = {
+        issuer: "server",
+        subject: AppUserAuth.userName,
+        audience:''
+    }
+    //console.log(tokenLib.verify(req.header('bearerToken'), options));
+    if(tokenLib.verify(req.header('bearerToken'), options)) {
+        res.status(200).json({"allowAccess": true});
+        res.end();
+    } else {
+        res.status(500).json({ error: 'invalid token' });
+        res.end();
+    }
 });
 
 

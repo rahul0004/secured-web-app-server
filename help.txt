@@ -1,0 +1,3 @@
+https://developer.okta.com/blog/2018/06/20/what-happens-if-your-jwt-is-stolen
+
+https://medium.com/@siddharthac6/json-web-token-jwt-the-right-way-of-implementing-with-node-js-65b8915d550e
