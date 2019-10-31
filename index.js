@@ -95,7 +95,7 @@ app.post("/auth", function(req, res){
                     }
                     //console.log("options...", options);
 
-                    AppUserAuth.bearerToken = tokenLib.sign({userName:AppUserAuth.userName}, options);
+                    AppUserAuth.bearerToken = tokenLib.sign({userName:AppUserAuth.userName, canAccessHome: AppUserAuth.userAccess.canAccessHome, canAccessProduct: AppUserAuth.userAccess.canAccessProduct}, options);
                     res.status(200).json(AppUserAuth);
                     res.end();
                 });
@@ -141,7 +141,27 @@ app.get('/product/:id', function(req, res){
     }
 });
 
+app.get('/products', function(req, res){
+    console.log(req.header('bearerToken'));
+    var options = {
+        issuer: "server",
+        subject: AppUserAuth.userName,
+        audience:''
+    }
+    
+    var token = tokenLib.verify(req.header('bearerToken'), options);
+    console.log("in products...", token);
+    if(token && token.canAccessProduct) {
+        res.status(200).json({"allowAccess": true});
+        res.end();
+    } else {
+        res.status(500).json({ error: 'invalid token' });
+        res.end();
+    }
+});
+
 
 
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'));
+
